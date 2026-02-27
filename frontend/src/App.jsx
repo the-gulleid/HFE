@@ -1,96 +1,50 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
 import Home from './pages/Home';
+import Services from './pages/Services';
+import Providers from './pages/Providers';
+import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Admin from './pages/Admin';
-import Pro from './pages/Pro';
-import Client from './pages/Client';
-import AdminAnalytics from "./pages/AdminDashboard";
-
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
-  return null;
-};
-
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
-
-  if (!token) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
-
-  return children;
-};
+import UserDashboard from './pages/user/UserDashboard';
+import ProviderDashboard from './pages/provider/ProviderDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import ProviderProfile from './pages/ProviderProfile';
+import ProtectedRoute from './components/ProtectedRoute';
+import { DataProvider } from './context/DataContext';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <div style={styles.appWrapper}>
-        <Navbar />
-
-        <main style={styles.mainContent}>
+    <AuthProvider>
+      <DataProvider>
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="services" element={<Services />} />
+              <Route path="providers" element={<Providers />} />
+              <Route path="about" element={<About />} />
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="provider/:id" element={<ProviderProfile />} />
 
-            {/* SHARED ANALYTICS ROUTE */}
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'pro', 'client']}>
-                  <AdminAnalytics />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/pro-dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['pro']}>
-                  <Pro />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/client-home"
-              element={
-                <ProtectedRoute allowedRoles={['client']}>
-                  <Client />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+                <Route path="user" element={<UserDashboard />} />
+              </Route>
+              <Route element={<ProtectedRoute allowedRoles={['provider']} />}>
+                <Route path="provider" element={<ProviderDashboard />} />
+              </Route>
+              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="admin-dashboard" element={<AdminDashboard />} />
+              </Route>
+            </Route>
           </Routes>
-        </main>
-
-        <footer style={styles.footer}>
-          © 2026 HOME-MAN Platform. All rights reserved.
-        </footer>
-      </div>
-    </BrowserRouter>
+        </BrowserRouter>
+      </DataProvider>
+    </AuthProvider>
   );
 }
-
-const styles = {
-  appWrapper: { minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' },
-  mainContent: { flex: 1, width: '100%', maxWidth: '1400px', margin: '0 auto', padding: '20px' },
-  footer: { padding: '30px', textAlign: 'center', borderTop: '1px solid #e2e8h0' }
-};
 
 export default App;
